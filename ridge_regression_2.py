@@ -46,3 +46,5 @@ y_val_pred = ridge.predict(X_val)  # Generate predictions '''y_test = predict(X_
 print(f"Validation Accuracy: {accuracy_score(y_val, y_val_pred):.4f}")  # Print accuracy
 print("Classification Report:")
 print(classification_report(y_val, y_val_pred))  # Output detailed metrics
+
+# validation accuracy: 0.5135
