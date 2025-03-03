@@ -4,7 +4,7 @@ This project is part of the QRT Challenge, where the goal is to predict stock pr
 The challenge involves processing financial data, engineering features, and developing predictive models to identify patterns in stock price behavior.
 Key aspects of the project include:
 
-(1) Data Cleansing: Aggregating market data, identifying issues, disproportionate sectors, etc
+(1) Data Cleansing: Abnormal value (Nan, None) detection, Aggregating market data, identifying issues, disproportionate sectors, etc
 
 (2) Feature Engineering: Extracting meaningful features that capture market dynamics.
 
@@ -26,6 +26,8 @@ Note: Cannot currently save the dataframe easily, because of how large it is in 
 
 ## Regression
 
-We can run the regression model using `ridge_regression_by_sector`; the `.ipynb` and `.pynb` are the same just different speeds.
+We can run the regression model using `ridge_regression_by_sector`; the `.ipynb` and `.py` are the same just different speeds.
 
 The `lgbm_model.py` is a different ML model selection that we are testing for now, but primarily we will be using the ridge regression.
+
+Currently we are testing `Lasso Regression` in comparison with `Ridge regression` to see how the prediction accuracy will change accordingly.
