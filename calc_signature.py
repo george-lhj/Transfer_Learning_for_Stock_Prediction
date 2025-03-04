@@ -3,6 +3,7 @@ import pandas as pd
 import iisignature
 from tqdm import tqdm
 from joblib import Parallel, delayed
+from scipy.stats import kurtosis
 
 def noise_reduction_variables_by_sector(df: pd.DataFrame):
     # Feature engineering
@@ -36,13 +37,14 @@ def process_group(key_group, sig_col, order):
     group = group.sort_values("DAY", ascending=True)
     
     # Compute additional indicators:
-    group['VOLATILITY_RET'] = group['RET'].std()
-    group['VOLATILITY_VOLUME'] = group['VOLUME'].std()
-    group['skew_20RET'] = group['RET'].skew()
-    group['kurtosis_20VOLUME'] = group['VOLUME'].kurtosis()
+    group['VOLATILITY_5RET'] = group['RET'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the return for each stock in 20 days
+    group['VOLATILITY_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the volume for each stock in 20 days
+    group['skew_5RET'] = group['RET'].rolling(window=5, min_periods=1).skew() #Compute the skewness of the return for each stock in 20 days
+    group['kurtosis_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).apply(
+        lambda x: kurtosis(x, bias=False, nan_policy='omit'), raw=True) #Compute the kurtosis of the volume for each stock in 20 days
 
-    sig_col = sig_col + ['VOLATILITY_RET', 'VOLATILITY_VOLUME', 'skew_20RET', 'kurtosis_20VOLUME']
-    path = group[sig_col].values.astype(np.float64)
+    sig_col = sig_col + ['VOLATILITY_5RET', 'VOLATILITY_5VOLUME', 'skew_5RET', 'kurtosis_5VOLUME']
+    path = group[sig_col].fillna(0).values.astype(np.float64)
     base_sig = iisignature.sig(path, order)
     sig = np.insert(base_sig, 0, 1.0)  # augmented signature
 
@@ -60,6 +62,7 @@ def calculation_signature_using_multiprocessing(df, order=3, sig_col=[]):
         for key_group in tqdm(grouped, total=total_groups, desc="Processing groups")
     )
     signatures, keys = zip(*results)
+    sig_col = sig_col + ['VOLATILITY_RET', 'VOLATILITY_VOLUME', 'skew_20RET', 'kurtosis_20VOLUME']
     sig_length = iisignature.siglength(len(sig_col), order)
     sig_columns = [f"SIG_{i}" for i in range(sig_length+1)]
     # Pre-allocate NumPy arrays for keys and signatures:
@@ -150,8 +153,6 @@ def calc_signature(df, order, new_features, filename, save=False):
         "RET",          # Original log-transformed return
         "VOLUME",       # Trading volume
         "DAY",          # Time indicator
-        "VOLATILITY_RET",   # standard deviation of RET of that stock in 20 days
-        "VOLATILITY_VOLUME",   # standard deviation of VOLUME of that stock in 20 days
     ]
     
     # Assume df_signature is your input DataFrame
