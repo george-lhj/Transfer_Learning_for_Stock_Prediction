@@ -9,27 +9,27 @@ def noise_reduction_variables_by_sector(df: pd.DataFrame):
     # Feature engineering
     df = df.copy()
     new_features = []
+    # Conditional aggregated features on 1 stock in 1 date and it's previous 20 days
+    # 计算 20 天收益率 (RET_) 相关特征
+    ret_cols = [col for col in df.columns if col.startswith("RET_")]
+    df["std_RET_20days"] = df[ret_cols].std(axis=1)
+    df["skew_RET_20days"] = df[ret_cols].skew(axis=1)
+    df["kurtosis_RET_20days"] = df[ret_cols].kurtosis(axis=1)
+    df["median_RET_20days"] = df[ret_cols].median(axis=1)
 
-    # Conditional aggregated features
-    shifts = [1,5]  # 选择不同的滞后期
-    statistics = ['skew']  # 增加鲁棒性统计量
-    gb_features = ['SECTOR', 'DATE']
-    target_feature = ['RET', 'VOLUME']
-    tmp_name = '_'.join(gb_features)
+    # 计算 20 天交易量 (VOLUME_) 相关特征
+    vol_cols = [col for col in df.columns if col.startswith("VOLUME_")]
+    df["std_VOL_20days"] = df[vol_cols].std(axis=1)
+    df["skew_VOL_20days"] = df[vol_cols].skew(axis=1)
+    df["kurtosis_VOL_20days"] = df[vol_cols].kurtosis(axis=1)
+    df["median_VOL_20days"] = df[vol_cols].median(axis=1)
 
-    # 计算不同滞后期的特征
-    for shift in shifts:
-        for stat in statistics:
-            for target in target_feature:
-                name = f'{shift}_{tmp_name}_{stat}_{target}'
-                feat = f'{target}_{shift}'
-                new_features.append(name)
-                if stat == 'median':
-                    df[name] = df.groupby(gb_features)[feat].transform('median')
-                elif stat == 'skew':
-                    df[name] = df.groupby(gb_features)[feat].transform(lambda x: x.skew())
-                elif stat == 'kurtosis':
-                    df[name] = df.groupby(gb_features)[feat].transform(lambda x: x.kurtosis())
+    # 更新 new_features 列表
+    new_features = [
+        "std_RET_20days", "skew_RET_20days", "kurtosis_RET_20days", "median_RET_20days",
+        "std_VOL_20days", "skew_VOL_20days", "kurtosis_VOL_20days", "median_VOL_20days"
+    ]
+
     return new_features, df
 
 def process_group(key_group, sig_col, order):
@@ -37,13 +37,10 @@ def process_group(key_group, sig_col, order):
     group = group.sort_values("DAY", ascending=True)
     
     # Compute additional indicators:
-    group['VOLATILITY_5RET'] = group['RET'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the return for each stock in 20 days
-    group['VOLATILITY_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the volume for each stock in 20 days
-    group['skew_5RET'] = group['RET'].rolling(window=5, min_periods=1).skew() #Compute the skewness of the return for each stock in 20 days
-    group['kurtosis_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).apply(
-        lambda x: kurtosis(x, bias=False, nan_policy='omit'), raw=True) #Compute the kurtosis of the volume for each stock in 20 days
+    # group['VOLATILITY_5RET'] = group['RET'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the return for each stock in 20 days
+    # group['VOLATILITY_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the volume for each stock in 20 days
 
-    sig_col = sig_col + ['VOLATILITY_5RET', 'VOLATILITY_5VOLUME', 'skew_5RET', 'kurtosis_5VOLUME']
+    # sig_col = sig_col + ['VOLATILITY_5RET', 'VOLATILITY_5VOLUME']
     path = group[sig_col].fillna(0).values.astype(np.float64)
     base_sig = iisignature.sig(path, order)
     sig = np.insert(base_sig, 0, 1.0)  # augmented signature
@@ -62,7 +59,7 @@ def calculation_signature_using_multiprocessing(df, order=3, sig_col=[]):
         for key_group in tqdm(grouped, total=total_groups, desc="Processing groups")
     )
     signatures, keys = zip(*results)
-    sig_col = sig_col + ['VOLATILITY_RET', 'VOLATILITY_VOLUME', 'skew_20RET', 'kurtosis_20VOLUME']
+    # sig_col = sig_col + ['VOLATILITY_RET', 'VOLATILITY_VOLUME']
     sig_length = iisignature.siglength(len(sig_col), order)
     sig_columns = [f"SIG_{i}" for i in range(sig_length+1)]
     # Pre-allocate NumPy arrays for keys and signatures:
@@ -132,19 +129,18 @@ def prepare_df_for_signature_computation(x: pd.DataFrame, y: pd.DataFrame, save=
 
     df_signature = df_signature.sort_values(["STOCK", "ID", "DAY"])
 
-    df_signature = df_signature[
-        (df_signature['RET'] >= df_signature['RET'].quantile(0.005)) & 
-        (df_signature['RET'] <= df_signature['RET'].quantile(0.995)) & 
-        (df_signature['VOLUME'] >= df_signature['VOLUME'].quantile(0.005)) & 
-        (df_signature['VOLUME'] <= df_signature['VOLUME'].quantile(0.995))
-    ]
+    # df_signature = df_signature[
+    #     (df_signature['RET'] >= df_signature['RET'].quantile(0.005)) & 
+    #     (df_signature['RET'] <= df_signature['RET'].quantile(0.995)) & 
+    #     (df_signature['VOLUME'] >= df_signature['VOLUME'].quantile(0.005)) & 
+    #     (df_signature['VOLUME'] <= df_signature['VOLUME'].quantile(0.995))
+    # ]
     if save:
         df_signature.to_parquet(f"./datasets/{filename}.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
         new_features_df.to_parquet(f"./datasets/{filename}_new_features.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
         with open(f"./datasets/{filename}_new_features.txt", "w") as f:
             f.write(str(new_features))
     return new_features, new_features_df, df_signature
-    # return df_signature
 
 def calc_signature(df, order, new_features, filename, save=False):
     df = df.copy().fillna(0)
@@ -165,9 +161,3 @@ def calc_signature(df, order, new_features, filename, save=False):
             data=combined_np_array.astype(np.float64)
         )
         print(f"Signature data saved to ./datasets/{filename}_signature_data.npz")
-
-    # # df_final = pd.DataFrame(combined_np_array, columns=column)
-    # df_final = pd.merge(df_final, y, on=["ID"], how="inner")
-    # df_final['RET'] = df_final["RET"].astype(int)
-
-    # return df_final
