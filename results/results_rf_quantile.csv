@@ -1,0 +1,109 @@
+Group,Train_Samples,Test_Samples,Best_Params,Accuracy,ROC_AUC,PR_AUC,Report
+5.0,16573,7930,"{'max_depth': 10, 'n_estimators': 100}",0.505296343001261,0.5064183407444651,0.5094599102771874,"              precision    recall  f1-score   support
+
+       False       0.50      0.34      0.40      3938
+        True       0.51      0.67      0.58      3992
+
+    accuracy                           0.51      7930
+   macro avg       0.50      0.50      0.49      7930
+weighted avg       0.50      0.51      0.49      7930
+"
+3.0,53418,27120,"{'max_depth': 5, 'n_estimators': 100}",0.49985250737463127,0.5008407616112671,0.48938043315498214,"              precision    recall  f1-score   support
+
+       False       0.51      0.54      0.52     13775
+        True       0.49      0.46      0.48     13345
+
+    accuracy                           0.50     27120
+   macro avg       0.50      0.50      0.50     27120
+weighted avg       0.50      0.50      0.50     27120
+"
+8.0,63535,29752,"{'max_depth': 10, 'n_estimators': 100}",0.4963699919333154,0.4971558578047253,0.497083011062539,"              precision    recall  f1-score   support
+
+       False       0.50      0.48      0.49     14941
+        True       0.49      0.52      0.51     14811
+
+    accuracy                           0.50     29752
+   macro avg       0.50      0.50      0.50     29752
+weighted avg       0.50      0.50      0.50     29752
+"
+1.0,20655,11607,"{'max_depth': 10, 'n_estimators': 100}",0.49582148703368656,0.498053653000584,0.4909645634036819,"              precision    recall  f1-score   support
+
+       False       0.50      0.45      0.48      5904
+        True       0.49      0.54      0.51      5703
+
+    accuracy                           0.50     11607
+   macro avg       0.50      0.50      0.50     11607
+weighted avg       0.50      0.50      0.49     11607
+"
+2.0,18394,9130,"{'max_depth': 10, 'n_estimators': 100}",0.4985761226725082,0.4991557572556287,0.49460531849080414,"              precision    recall  f1-score   support
+
+       False       0.50      0.55      0.53      4597
+        True       0.49      0.45      0.47      4533
+
+    accuracy                           0.50      9130
+   macro avg       0.50      0.50      0.50      9130
+weighted avg       0.50      0.50      0.50      9130
+"
+4.0,59654,27729,"{'max_depth': 5, 'n_estimators': 50}",0.5051750874535684,0.5054435629454966,0.510116369377673,"              precision    recall  f1-score   support
+
+       False       0.50      0.66      0.57     13785
+        True       0.51      0.35      0.41     13944
+
+    accuracy                           0.51     27729
+   macro avg       0.51      0.51      0.49     27729
+weighted avg       0.51      0.51      0.49     27729
+"
+7.0,81034,40655,"{'max_depth': 10, 'n_estimators': 50}",0.5012913540769893,0.5003554962954294,0.49596331471009786,"              precision    recall  f1-score   support
+
+       False       0.51      0.47      0.49     20527
+        True       0.50      0.53      0.51     20128
+
+    accuracy                           0.50     40655
+   macro avg       0.50      0.50      0.50     40655
+weighted avg       0.50      0.50      0.50     40655
+"
+11.0,3042,3742,"{'max_depth': 5, 'n_estimators': 50}",0.5034740780331374,0.5046560531261703,0.504790369650769,"              precision    recall  f1-score   support
+
+       False       0.50      0.56      0.53      1859
+        True       0.51      0.45      0.48      1883
+
+    accuracy                           0.50      3742
+   macro avg       0.50      0.50      0.50      3742
+weighted avg       0.50      0.50      0.50      3742
+"
+10.0,12942,5733,"{'max_depth': 5, 'n_estimators': 100}",0.504099075527647,0.5058867665959146,0.5090425176396969,"              precision    recall  f1-score   support
+
+       False       0.51      0.04      0.08      2848
+        True       0.50      0.96      0.66      2885
+
+    accuracy                           0.50      5733
+   macro avg       0.51      0.50      0.37      5733
+weighted avg       0.51      0.50      0.37      5733
+"
+6.0,48430,26719,"{'max_depth': 10, 'n_estimators': 100}",0.5021520266477039,0.500666216558331,0.5045669999000002,"              precision    recall  f1-score   support
+
+       False       0.50      0.52      0.51     13235
+        True       0.51      0.48      0.49     13484
+
+    accuracy                           0.50     26719
+   macro avg       0.50      0.50      0.50     26719
+weighted avg       0.50      0.50      0.50     26719
+"
+0.0,4410,1897,"{'max_depth': 5, 'n_estimators': 50}",0.5065893516078018,0.5043570427080319,0.5181118854129083,"              precision    recall  f1-score   support
+
+       False       0.49      0.42      0.45       917
+        True       0.52      0.59      0.55       980
+
+    accuracy                           0.51      1897
+   macro avg       0.50      0.50      0.50      1897
+weighted avg       0.50      0.51      0.50      1897
+"
+9.0,4560,3235,"{'max_depth': 5, 'n_estimators': 100}",0.5106646058732612,0.5045123406897511,0.4957829242010927,"              precision    recall  f1-score   support
+
+       False       0.51      0.66      0.58      1646
+        True       0.50      0.35      0.42      1589
+
+    accuracy                           0.51      3235
+   macro avg       0.51      0.51      0.50      3235
+weighted avg       0.51      0.51      0.50      3235
+"

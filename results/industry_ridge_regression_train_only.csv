@@ -1,0 +1,109 @@
+Group,Train_Samples,Test_Samples,Best_Alpha,Accuracy,ROC_AUC,PR_AUC,Report,Model
+5.0,13862,3433,10.0,0.5091756481211768,0.5173765316859578,0.512551735368048,"              precision    recall  f1-score   support
+
+           0       0.52      0.10      0.17      1700
+           1       0.51      0.91      0.65      1733
+
+    accuracy                           0.51      3433
+   macro avg       0.52      0.51      0.41      3433
+weighted avg       0.52      0.51      0.41      3433
+",RidgeClassifier(alpha=np.float64(10.0))
+3.0,44287,11186,0.1,0.510280708027892,0.5166221926314758,0.5119262296550229,"              precision    recall  f1-score   support
+
+           0       0.51      0.50      0.51      5633
+           1       0.51      0.52      0.51      5553
+
+    accuracy                           0.51     11186
+   macro avg       0.51      0.51      0.51     11186
+weighted avg       0.51      0.51      0.51     11186
+",RidgeClassifier(alpha=np.float64(0.1))
+6.0,44102,11021,215.44346900318823,0.5030396515742673,0.5067333322355962,0.5040299068456613,"              precision    recall  f1-score   support
+
+           0       0.50      0.87      0.64      5521
+           1       0.51      0.14      0.21      5500
+
+    accuracy                           0.50     11021
+   macro avg       0.51      0.50      0.43     11021
+weighted avg       0.51      0.50      0.43     11021
+",RidgeClassifier(alpha=np.float64(215.44346900318823))
+8.0,56720,14123,2.154434690031882,0.508744601005452,0.5219434061908405,0.5129931018046532,"              precision    recall  f1-score   support
+
+           0       0.51      0.71      0.59      7086
+           1       0.51      0.30      0.38      7037
+
+    accuracy                           0.51     14123
+   macro avg       0.51      0.51      0.49     14123
+weighted avg       0.51      0.51      0.49     14123
+",RidgeClassifier(alpha=np.float64(2.154434690031882))
+1.0,16973,4291,46.41588833612773,0.5413656490328594,0.5530738060366245,0.5473130565924451,"              precision    recall  f1-score   support
+
+           0       0.57      0.25      0.35      2094
+           1       0.53      0.82      0.65      2197
+
+    accuracy                           0.54      4291
+   macro avg       0.55      0.53      0.50      4291
+weighted avg       0.55      0.54      0.50      4291
+",RidgeClassifier(alpha=np.float64(46.41588833612773))
+2.0,15150,3817,1000.0,0.510872412889704,0.5182031297620637,0.5159854553240453,"              precision    recall  f1-score   support
+
+           0       0.52      0.47      0.49      1926
+           1       0.51      0.55      0.53      1891
+
+    accuracy                           0.51      3817
+   macro avg       0.51      0.51      0.51      3817
+weighted avg       0.51      0.51      0.51      3817
+",RidgeClassifier(alpha=np.float64(1000.0))
+0.0,5003,1301,1000.0,0.5073020753266718,0.501098953152385,0.4671565255229446,"              precision    recall  f1-score   support
+
+           0       0.52      0.77      0.62       681
+           1       0.46      0.22      0.30       620
+
+    accuracy                           0.51      1301
+   macro avg       0.49      0.49      0.46      1301
+weighted avg       0.49      0.51      0.47      1301
+",RidgeClassifier(alpha=np.float64(1000.0))
+4.0,50856,12663,215.44346900318823,0.5084892995340756,0.517133926771856,0.505423976340013,"              precision    recall  f1-score   support
+
+           0       0.51      0.62      0.56      6426
+           1       0.50      0.39      0.44      6237
+
+    accuracy                           0.51     12663
+   macro avg       0.51      0.51      0.50     12663
+weighted avg       0.51      0.51      0.50     12663
+",RidgeClassifier(alpha=np.float64(215.44346900318823))
+7.0,70531,17372,46.41588833612773,0.5127216209993092,0.5247722441638261,0.5223010540771508,"              precision    recall  f1-score   support
+
+           0       0.51      0.51      0.51      8697
+           1       0.51      0.52      0.51      8675
+
+    accuracy                           0.51     17372
+   macro avg       0.51      0.51      0.51     17372
+weighted avg       0.51      0.51      0.51     17372
+",RidgeClassifier(alpha=np.float64(46.41588833612773))
+11.0,2422,632,10.0,0.5474683544303798,0.5712347354138398,0.6304543632154733,"              precision    recall  f1-score   support
+
+           0       0.51      0.72      0.60       297
+           1       0.61      0.40      0.48       335
+
+    accuracy                           0.55       632
+   macro avg       0.56      0.56      0.54       632
+weighted avg       0.57      0.55      0.54       632
+",RidgeClassifier(alpha=np.float64(10.0))
+10.0,10547,2748,1000.0,0.5189228529839883,0.5337454619525434,0.5438064290856719,"              precision    recall  f1-score   support
+
+           0       0.50      0.04      0.07      1322
+           1       0.52      0.97      0.68      1426
+
+    accuracy                           0.52      2748
+   macro avg       0.51      0.50      0.37      2748
+weighted avg       0.51      0.52      0.38      2748
+",RidgeClassifier(alpha=np.float64(1000.0))
+9.0,4423,1132,215.44346900318823,0.5079505300353356,0.512145850272062,0.4923195352928254,"              precision    recall  f1-score   support
+
+           0       0.52      0.78      0.62       590
+           1       0.47      0.21      0.29       542
+
+    accuracy                           0.51      1132
+   macro avg       0.49      0.50      0.46      1132
+weighted avg       0.50      0.51      0.47      1132
+",RidgeClassifier(alpha=np.float64(215.44346900318823))
