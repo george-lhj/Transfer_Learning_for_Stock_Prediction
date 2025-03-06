@@ -1,61 +1,69 @@
 import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
 from tqdm import tqdm
-from sklearn.cluster import SpectralClustering
 
-# --- Step 1: Read CSV ---
 sig = pd.read_csv("df_train_wdate.csv")
 
-# Use the 'stock' column to get the union of stocks (assumed to be ~5k stocks)
+# Get the unique stock IDs
 all_stock_ids = sorted(sig["STOCK"].unique())
 
-# --- Step 2: Define helper functions ---
+# Compute kernel and distance functions
 def compute_kernel(df):
     cols = [c for c in df.columns if c.startswith("SIG_")]
-    sig_data = df[cols].values.astype(np.float32)
-    kernel = np.dot(sig_data, sig_data.T)
+    features = df[cols].values.astype(np.float32)
+    kernel = features @ features.T
     return pd.DataFrame(kernel, index=df["STOCK"], columns=df["STOCK"])
 
 def compute_signature_distance(kernel_df):
-    k = kernel_df.values.astype(np.float32)
+    k = kernel_df.values
     diag = np.diag(k)
     dist = diag[:, None] - 2 * k + diag[None, :]
     return pd.DataFrame(dist, index=kernel_df.index, columns=kernel_df.columns)
 
-# --- Step 3: Process each date and accumulate distances ---
-sum_distance_df = pd.DataFrame(0.0, index=all_stock_ids, columns=all_stock_ids)
-count_df = pd.DataFrame(0, index=all_stock_ids, columns=all_stock_ids)
+# Initialize distance accumulator
+distance_sum = pd.DataFrame(0.0, index=all_stock_ids, columns=all_stock_ids)
+counts = pd.DataFrame(0, index=all_stock_ids, columns=all_stock_ids)
 
-dates = sorted(sig["DATE"].unique())
-for d in tqdm(dates, desc="Processing Dates"):
-    sig_d = sig[sig["DATE"] == d]
-    kernel_d = compute_kernel(sig_d)
-    distance_d = compute_signature_distance(kernel_d)
-    # Reindex to full set of stocks (filling missing with NaN)
-    distance_d_reindexed = distance_d.reindex(index=all_stock_ids, columns=all_stock_ids)
-    sum_distance_df = sum_distance_df.add(distance_d_reindexed.fillna(0))
-    count_df = count_df.add(distance_d_reindexed.notna().astype(int))
+# Accumulate distances across all dates
+for date, group in tqdm(sig.groupby('DATE'), desc="Processing Dates"):
+    kernel_df = compute_kernel(group)
+    dist_df = compute_signature_distance(kernel_df)
+    dist_reindexed = dist_df.reindex(index=all_stock_ids, columns=all_stock_ids)
+    mask = ~dist_reindexed.isna()
+    distance_sum[mask] += dist_reindexed[mask]
+    counts[mask] += 1
 
-# --- Step 4: Compute the average distance matrix ---
-avg_distance_df = sum_distance_df / count_df
-avg_distance_df = avg_distance_df.fillna(0)
+# Calculate average distances
+avg_distance = distance_sum / counts
+avg_distance = avg_distance.fillna(avg_distance.max().max())
 
-# --- Step 5: Convert the distance matrix to an affinity matrix ---
-# One common approach is to use a Gaussian kernel:
-#   affinity[i,j] = exp(-gamma * distance[i,j])
-# Here we choose gamma = 1 / sigma, where sigma is the median of nonzero distances.
-nonzero_dist = avg_distance_df.values[avg_distance_df.values > 0]
-sigma = np.median(nonzero_dist) if nonzero_dist.size > 0 else 1.0
-gamma = 1 / sigma
-affinity_matrix = np.exp(-avg_distance_df.values * gamma)
+# Elbow method to determine best k
+inertia_values = []
+k_range = range(2, 21)
+for k in tqdm(k_range, desc="Finding optimal k"):
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
+    kmeans.fit(avg_distance)
+    inertia_values.append(kmeans.inertia_)
 
-# --- Step 6: Cluster the stocks into 10 groups using Spectral Clustering ---
-sc = SpectralClustering(n_clusters=10, affinity="precomputed", random_state=42)
-labels = sc.fit_predict(affinity_matrix)
+# Plot elbow graph
+plt.figure(figsize=(10, 6))
+plt.plot(k_range, inertia_values, 'o-')
+plt.xlabel('Number of clusters (k)')
+plt.ylabel('Inertia')
+plt.title('Elbow Method for Optimal Clusters')
+plt.grid(True)
+plt.xticks(k_range)
+plt.savefig('elbow_method.png')
+plt.show()
 
-# Map each stock to its cluster label
-clusters_df = pd.DataFrame({"stock": avg_distance_df.index, "cluster": labels})
+# Choose optimal k (manually identified from elbow graph, e.g., 10)
+optimal_k = 10
+kmeans_final = KMeans(n_clusters=optimal_k, random_state=42, n_init='auto')
+labels = kmeans_final.fit_predict(avg_distance)
 
-# Save clusters to CSV
-clusters_df.to_csv("stock_clusters_10_groups.csv", index=False)
-print("Stock clusters saved to 'stock_clusters_10_groups.csv'")
+# Save cluster results
+clusters_df = pd.DataFrame({"stock": all_stock_ids, "cluster": labels})
+clusters_df.to_csv("stock_clusters_kmeans.csv", index=False)
+avg_distance.to_csv("avg_distance_matrix_between_stocks.csv", index=True)
