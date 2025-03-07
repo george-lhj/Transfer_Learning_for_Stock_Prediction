@@ -10,7 +10,6 @@ from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
 from calc_signature import *
 from tqdm import tqdm
-from sig_kernel import *
 
 if __name__ == "__main__":
     x_train = pd.read_csv("./datasets/x_train.csv")
@@ -25,8 +24,11 @@ if __name__ == "__main__":
     # # Calculate signature for df_train and df_test and save them as npz files
     df_train_sig_prepared = pd.read_parquet("./datasets/df_train.parquet")
     df_test_sig_prepared = pd.read_parquet("./datasets/df_test.parquet")
-    with open("./datasets/df_train_new_features.txt", "r") as f:
-        new_features = eval(f.read())
+    try:
+        with open("./datasets/df_train_new_features.txt", "r") as f:
+            new_features = eval(f.read())
+    except:
+        new_features = []
 
     calc_signature(df_train_sig_prepared, order=3, new_features=new_features, filename="df_train", save=True)
     calc_signature(df_test_sig_prepared, order=3, new_features=new_features, filename="df_test", save=True)
@@ -71,7 +73,7 @@ if __name__ == "__main__":
     df_train_final.to_parquet("./datasets/df_train_wdate.parquet", engine='pyarrow', compression='snappy')
     df_test_final.to_parquet("./datasets/df_test_wdate.parquet", engine='pyarrow', compression='snappy')
     
-    
+
 
     # industry_lst = df_train_final.INDUSTRY.unique() # 'INDUSTRY'
     # industry_group_lst = df_train_final.INDUSTRY_GROUP.unique() # 'INDUSTRY_GROUP'

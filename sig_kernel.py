@@ -5,12 +5,15 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from kneed import KneeLocator
 from joblib import Parallel, delayed
+import random
 
+np.random.seed(40)
+random.seed(40)
 ################################################################################
 #                                TRAINING
 ################################################################################
 print("Loading dataset...")
-df_train = pd.read_csv("./datasets/df_train_wdate.csv")
+df_train = pd.read_parquet("./datasets/df_train_wdate.parquet")
 
 # Unique training stock IDs
 all_stock_ids = sorted(df_train["STOCK"].unique())
@@ -25,7 +28,7 @@ def compute_kernel(df):
 def compute_signature_distance(kernel_df):
     k = kernel_df.values
     diag = np.diag(k)
-    dist = np.abs(diag[:, None] - 2 * k + diag[None, :])  # float64 or float32 (we'll fix later)
+    dist = np.abs(diag[:, None] - 2 * k + diag[None, :])
     return pd.DataFrame(dist, index=kernel_df.index, columns=kernel_df.columns)
 
 # Initialize distance accumulation
@@ -69,7 +72,7 @@ print("Finding optimal k using the elbow method...")
 k_range = range(2, 21)
 inertia_values = []
 for k in tqdm(k_range, desc="Evaluating K-Means"):
-    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=10)
+    kmeans_temp = KMeans(n_clusters=k, random_state=40, n_init=10)
     kmeans_temp.fit(avg_distance_32)
     inertia_values.append(kmeans_temp.inertia_)
 
@@ -94,7 +97,7 @@ print("Elbow method plot saved as 'elbow_method.png'")
 
 # Final K-Means
 print(f"Performing final K-Means clustering with k={optimal_k}...")
-kmeans_final = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
+kmeans_final = KMeans(n_clusters=optimal_k, random_state=40, n_init=10)
 kmeans_final.fit(avg_distance_32)  # Train on float32 array
 labels = kmeans_final.labels_
 print("Clustering completed.")
@@ -118,15 +121,15 @@ print("Clustering completed.")
 print("Adding cluster assignments to original dataset...")
 stock_to_cluster = dict(zip(all_stock_ids, labels))
 df_train["CLUSTER"] = df_train["STOCK"].map(stock_to_cluster)
-df_train.to_csv("./datasets/df_train_wdate_wclusters.csv", index=False)
-print("Updated dataset saved to 'df_train_wdate_wclusters.csv'.")
+df_train.to_parquet("./datasets/df_train_wdate_wclusters.parquet", engine='pyarrow', compression='snappy')
+print("Updated dataset saved to 'df_train_wdate_wclusters.parquet'.")
 
 
 ################################################################################
 #                                TESTING
 ################################################################################
 print("Loading test dataset...")
-df_test = pd.read_csv("./datasets/df_test_wdate.csv")
+df_test = pd.read_parquet("./datasets/df_test_wdate.parquet")
 
 # Get unique stock IDs in test
 test_stock_ids = sorted(df_test["STOCK"].unique())
@@ -159,7 +162,7 @@ test_stock_to_cluster = dict(zip(test_stock_ids, labels_test))
 df_test["CLUSTER"] = df_test["STOCK"].map(test_stock_to_cluster)
 
 # Save updated test set
-df_test.to_csv("./datasets/df_test_wdate_wclusters.csv", index=False)
-print("Updated test dataset saved to 'df_test_wdate_wclusters.csv'.")
+df_test.to_parquet("./datasets/df_test_wdate_wclusters.parquet", engine='pyarrow', compression='snappy')
+print("Updated test dataset saved to 'df_test_wdate_wclusters.parquet'.")
 
 print("\n Complete!")

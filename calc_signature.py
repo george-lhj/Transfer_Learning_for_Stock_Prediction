@@ -37,12 +37,12 @@ def process_group(key_group, sig_col, order):
     group = group.sort_values("DAY", ascending=True)
     
     # Compute additional indicators: cumulative statistics
-    group['std_RET'] = group['RET'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积收益率标准差
-    group['mean_RET'] = group['RET'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积收益率均值
-    group['std_VOL'] = group['VOLUME'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积交易量标准差
-    group['mean_VOL'] = group['VOLUME'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积交易量均值
+    # group['std_RET'] = group['RET'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积收益率标准差
+    # group['mean_RET'] = group['RET'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积收益率均值
+    # group['std_VOL'] = group['VOLUME'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积交易量标准差
+    # group['mean_VOL'] = group['VOLUME'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积交易量均值
 
-    sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
+    # sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
     path = group[sig_col].fillna(0).values.astype(np.float64)
     base_sig = iisignature.sig(path, order)
     sig = np.insert(base_sig, 0, 1.0)  # augmented signature
@@ -61,7 +61,7 @@ def calculation_signature_using_multiprocessing(df, order=3, sig_col=[]):
         for key_group in tqdm(grouped, total=total_groups, desc="Processing groups")
     )
     signatures, keys = zip(*results)
-    sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
+    # sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
     sig_length = iisignature.siglength(len(sig_col), order)
     sig_columns = [f"SIG_{i}" for i in range(sig_length+1)]
     # Pre-allocate NumPy arrays for keys and signatures:
