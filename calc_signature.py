@@ -36,11 +36,13 @@ def process_group(key_group, sig_col, order):
     (stock, id_, industry, industry_group, sector, sub_industry), group = key_group
     group = group.sort_values("DAY", ascending=True)
     
-    # Compute additional indicators:
-    # group['VOLATILITY_5RET'] = group['RET'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the return for each stock in 20 days
-    # group['VOLATILITY_5VOLUME'] = group['VOLUME'].rolling(window=5, min_periods=1).std() #Compute the standard deviation of the volume for each stock in 20 days
+    # Compute additional indicators: cumulative statistics
+    group['std_RET'] = group['RET'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积收益率标准差
+    group['mean_RET'] = group['RET'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积收益率均值
+    group['std_VOL'] = group['VOLUME'].expanding(min_periods=1).std() # 计算每个股票从第一天到当前的累积交易量标准差
+    group['mean_VOL'] = group['VOLUME'].expanding(min_periods=1).mean() # 计算每个股票从第一天到当前的累积交易量均值
 
-    # sig_col = sig_col + ['VOLATILITY_5RET', 'VOLATILITY_5VOLUME']
+    sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
     path = group[sig_col].fillna(0).values.astype(np.float64)
     base_sig = iisignature.sig(path, order)
     sig = np.insert(base_sig, 0, 1.0)  # augmented signature
@@ -59,7 +61,7 @@ def calculation_signature_using_multiprocessing(df, order=3, sig_col=[]):
         for key_group in tqdm(grouped, total=total_groups, desc="Processing groups")
     )
     signatures, keys = zip(*results)
-    # sig_col = sig_col + ['VOLATILITY_RET', 'VOLATILITY_VOLUME']
+    sig_col = sig_col + ['std_RET', 'mean_RET', 'std_VOL', 'mean_VOL']
     sig_length = iisignature.siglength(len(sig_col), order)
     sig_columns = [f"SIG_{i}" for i in range(sig_length+1)]
     # Pre-allocate NumPy arrays for keys and signatures:
@@ -78,7 +80,7 @@ def prepare_df_for_signature_computation(x: pd.DataFrame, y: pd.DataFrame, save=
     df[ret_cols] = df[ret_cols].apply(lambda x: np.log1p(x))
 
     # noise reduction
-    new_features, new_features_df = noise_reduction_variables_by_sector(df)
+    # new_features, new_features_df = noise_reduction_variables_by_sector(df)
 
     ret_cols = sorted(
         [col for col in df.columns if col.startswith("RET_")],
@@ -137,10 +139,10 @@ def prepare_df_for_signature_computation(x: pd.DataFrame, y: pd.DataFrame, save=
     # ]
     if save:
         df_signature.to_parquet(f"./datasets/{filename}.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
-        new_features_df.to_parquet(f"./datasets/{filename}_new_features.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
-        with open(f"./datasets/{filename}_new_features.txt", "w") as f:
-            f.write(str(new_features))
-    return new_features, new_features_df, df_signature
+        # new_features_df.to_parquet(f"./datasets/{filename}_new_features.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
+        # with open(f"./datasets/{filename}_new_features.txt", "w") as f:
+        #     f.write(str(new_features))
+
 
 def calc_signature(df, order, new_features, filename, save=False):
     df = df.copy().fillna(0)

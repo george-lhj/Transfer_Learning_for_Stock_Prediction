@@ -9,9 +9,8 @@ from joblib import Parallel, delayed
 ################################################################################
 #                                TRAINING
 ################################################################################
-
 print("Loading dataset...")
-df_train = pd.read_csv("df_train_wdate.csv")
+df_train = pd.read_csv("./datasets/df_train_wdate.csv")
 
 # Unique training stock IDs
 all_stock_ids = sorted(df_train["STOCK"].unique())
@@ -119,16 +118,15 @@ print("Clustering completed.")
 print("Adding cluster assignments to original dataset...")
 stock_to_cluster = dict(zip(all_stock_ids, labels))
 df_train["CLUSTER"] = df_train["STOCK"].map(stock_to_cluster)
-df_train.to_csv("df_train_wdate_wclusters.csv", index=False)
+df_train.to_csv("./datasets/df_train_wdate_wclusters.csv", index=False)
 print("Updated dataset saved to 'df_train_wdate_wclusters.csv'.")
 
 
 ################################################################################
 #                                TESTING
 ################################################################################
-
 print("Loading test dataset...")
-df_test = pd.read_csv("df_test_wdate.csv")
+df_test = pd.read_csv("./datasets/df_test_wdate.csv")
 
 # Get unique stock IDs in test
 test_stock_ids = sorted(df_test["STOCK"].unique())
@@ -161,7 +159,7 @@ test_stock_to_cluster = dict(zip(test_stock_ids, labels_test))
 df_test["CLUSTER"] = df_test["STOCK"].map(test_stock_to_cluster)
 
 # Save updated test set
-df_test.to_csv("df_test_wdate_wclusters.csv", index=False)
+df_test.to_csv("./datasets/df_test_wdate_wclusters.csv", index=False)
 print("Updated test dataset saved to 'df_test_wdate_wclusters.csv'.")
 
 print("\n Complete!")
