@@ -131,12 +131,13 @@ def prepare_df_for_signature_computation(x: pd.DataFrame, y: pd.DataFrame, save=
 
     df_signature = df_signature.sort_values(["STOCK", "ID", "DAY"])
 
-    # df_signature = df_signature[
-    #     (df_signature['RET'] >= df_signature['RET'].quantile(0.005)) & 
-    #     (df_signature['RET'] <= df_signature['RET'].quantile(0.995)) & 
-    #     (df_signature['VOLUME'] >= df_signature['VOLUME'].quantile(0.005)) & 
-    #     (df_signature['VOLUME'] <= df_signature['VOLUME'].quantile(0.995))
-    # ]
+    df_signature = df_signature[
+        (df_signature['RET'] >= df_signature['RET'].quantile(0.005)) & 
+        (df_signature['RET'] <= df_signature['RET'].quantile(0.995)) & 
+        (df_signature['VOLUME'] >= df_signature['VOLUME'].quantile(0.005)) & 
+        (df_signature['VOLUME'] <= df_signature['VOLUME'].quantile(0.995))
+    ]
+    
     if save:
         df_signature.to_parquet(f"./datasets/{filename}.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet
         # new_features_df.to_parquet(f"./datasets/{filename}_new_features.parquet", engine='pyarrow', compression='snappy')  # 保存为 Parquet

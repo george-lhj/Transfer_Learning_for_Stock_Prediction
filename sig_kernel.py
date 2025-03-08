@@ -7,12 +7,13 @@ from kneed import KneeLocator
 from joblib import Parallel, delayed
 import random
 
-np.random.seed(40)
-random.seed(40)
+np.random.seed(42)
+random.seed(42)
 ################################################################################
 #                                TRAINING
 ################################################################################
 print("Loading dataset...")
+# df_train = pd.read_csv('/Users/runminghuang/Desktop/归档/df_train_wdate.csv')
 df_train = pd.read_parquet("./datasets/df_train_wdate.parquet")
 
 # Unique training stock IDs
@@ -69,10 +70,10 @@ avg_distance_32 = avg_distance.values.astype(np.float32)
 
 # Elbow method
 print("Finding optimal k using the elbow method...")
-k_range = range(2, 21)
+k_range = range(2, 10)
 inertia_values = []
 for k in tqdm(k_range, desc="Evaluating K-Means"):
-    kmeans_temp = KMeans(n_clusters=k, random_state=40, n_init=10)
+    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=10)
     kmeans_temp.fit(avg_distance_32)
     inertia_values.append(kmeans_temp.inertia_)
 
@@ -92,12 +93,12 @@ plt.legend()
 plt.grid(True)
 plt.xticks(list(k_range))
 plt.savefig('elbow_method.png')
-plt.show()
+# plt.show()
 print("Elbow method plot saved as 'elbow_method.png'")
 
 # Final K-Means
 print(f"Performing final K-Means clustering with k={optimal_k}...")
-kmeans_final = KMeans(n_clusters=optimal_k, random_state=40, n_init=10)
+kmeans_final = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
 kmeans_final.fit(avg_distance_32)  # Train on float32 array
 labels = kmeans_final.labels_
 print("Clustering completed.")
@@ -129,6 +130,7 @@ print("Updated dataset saved to 'df_train_wdate_wclusters.parquet'.")
 #                                TESTING
 ################################################################################
 print("Loading test dataset...")
+# df_test = pd.read_csv('/Users/runminghuang/Desktop/归档/df_test_wdate.csv')
 df_test = pd.read_parquet("./datasets/df_test_wdate.parquet")
 
 # Get unique stock IDs in test
