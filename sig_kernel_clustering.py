@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from kneed import KneeLocator
 from joblib import Parallel, delayed
 import joblib
 import random
@@ -16,16 +16,20 @@ random.seed(42)
 ################################################################################
 #                          CONFIGURATION
 ################################################################################
-time_window = 10   # Match your calc_signature_new setting
-order = 3          # Signature order used in calc_signature_new
+time_window = 10
+order = 3
 input_prefix = "sig_data_SP500"
 input_path = f"./datasets/{input_prefix}_w{time_window}_o{order}.parquet"
+
+# Fixed number of clusters
+optimal_k = 10
 
 # Output paths
 clustered_data_path = "./datasets/df_train_wclusters.parquet"
 model_path = "./datasets/kmeans_final.joblib"
 stock_list_path = "./datasets/all_stock_ids.joblib"
 centroids_path = "./datasets/cluster_centroids.joblib"
+distance_matrix_path = "avg_distance_32.npy"
 
 ################################################################################
 #                            LOAD DATA
@@ -33,17 +37,13 @@ centroids_path = "./datasets/cluster_centroids.joblib"
 print(f"Loading signature data from: {input_path}")
 df_train = pd.read_parquet(input_path)
 
-# Rename to expected format
 if 'symbol' in df_train.columns:
     df_train.rename(columns={'symbol': 'STOCK'}, inplace=True)
 if 'date' in df_train.columns:
     df_train.rename(columns={'date': 'DATE'}, inplace=True)
 
-# Make sure stock/date are strings for consistent indexing
 df_train["STOCK"] = df_train["STOCK"].astype(str)
 df_train["DATE"] = pd.to_datetime(df_train["DATE"])
-
-# Get stock list
 all_stock_ids = sorted(df_train["STOCK"].unique())
 
 ################################################################################
@@ -52,7 +52,7 @@ all_stock_ids = sorted(df_train["STOCK"].unique())
 def compute_kernel(df):
     feature_cols = [c for c in df.columns if c.startswith("SIG_")]
     features = df[feature_cols].values.astype(np.float32)
-    kernel = np.einsum('ij,kj->ik', features, features)  # dot product
+    kernel = np.einsum('ij,kj->ik', features, features)
     return pd.DataFrame(kernel, index=df["STOCK"], columns=df["STOCK"])
 
 def compute_signature_distance(kernel_df):
@@ -69,7 +69,6 @@ distance_sum = pd.DataFrame(0.0, index=all_stock_ids, columns=all_stock_ids, dty
 counts = pd.DataFrame(0, index=all_stock_ids, columns=all_stock_ids, dtype=np.int32)
 
 def process_group(group):
-    # Remove duplicates before computing
     group = group.drop_duplicates(subset="STOCK", keep="first")
     kernel = compute_kernel(group)
     return compute_signature_distance(kernel)
@@ -95,53 +94,36 @@ avg_distance.fillna(float(avg_distance.mean().mean()), inplace=True)
 avg_distance_32 = avg_distance.values.astype(np.float32)
 
 ################################################################################
-#                     ELBOW METHOD TO FIND OPTIMAL k
+#                    EMBED DISTANCE MATRIX → VECTOR SPACE
 ################################################################################
-print("Using elbow method to find optimal k...")
-k_range = range(2, 21)
-inertia_values = []
-
-for k in tqdm(k_range, desc="Fitting K-Means"):
-    kmeans_temp = KMeans(n_clusters=k, random_state=42, n_init=10)
-    kmeans_temp.fit(avg_distance_32)
-    inertia_values.append(kmeans_temp.inertia_)
-
-knee_locator = KneeLocator(k_range, inertia_values, curve='convex', direction='decreasing')
-optimal_k = knee_locator.elbow or 5  # Fallback to 5 if elbow not found
-print(f"Optimal number of clusters: k = {optimal_k}")
-
-# Plot elbow
-plt.figure(figsize=(10, 6))
-plt.plot(k_range, inertia_values, 'o-', label="Inertia")
-plt.axvline(optimal_k, color='red', linestyle='--', label=f"Optimal k={optimal_k}")
-plt.xlabel('Number of clusters (k)')
-plt.ylabel('Inertia')
-plt.title('Elbow Method for Optimal Clusters')
-plt.legend()
-plt.grid(True)
-plt.xticks(list(k_range))
-plt.savefig('elbow_method.png')
-plt.show()
+print("Embedding distance matrix into vector space using MDS...")
+mds = MDS(n_components=10, dissimilarity='precomputed', random_state=42)
+mds_embedding = mds.fit_transform(avg_distance_32)
 
 ################################################################################
 #                         FINAL K-MEANS CLUSTERING
 ################################################################################
-print(f"Running final KMeans clustering (k={optimal_k})...")
+print(f"Running final KMeans clustering (k={optimal_k}) on MDS embedding...")
 kmeans_final = KMeans(n_clusters=optimal_k, random_state=42, n_init=10)
-kmeans_final.fit(avg_distance_32)
+kmeans_final.fit(mds_embedding)
 labels = kmeans_final.labels_
 
 # Save mappings
 cluster_centroids = kmeans_final.cluster_centers_
 stock_to_cluster = dict(zip(all_stock_ids, labels))
-
 df_train["CLUSTER"] = df_train["STOCK"].map(stock_to_cluster)
 
-# Save final dataset
+# Optional: print cluster sizes
+cluster_sizes = pd.Series(labels).value_counts().sort_index()
+print("Cluster sizes:")
+print(cluster_sizes)
+
+################################################################################
+#                         SAVE OUTPUTS
+################################################################################
 df_train.to_parquet(clustered_data_path, engine='pyarrow', compression='snappy')
 print(f"✅ Clustered data saved to: {clustered_data_path}")
 
-# Save model and meta
 joblib.dump(kmeans_final, model_path)
 print(f"✅ Saved KMeans model to: {model_path}")
 
@@ -150,3 +132,6 @@ print(f"✅ Saved stock list to: {stock_list_path}")
 
 joblib.dump(cluster_centroids, centroids_path)
 print(f"✅ Saved centroids to: {centroids_path}")
+
+np.save(distance_matrix_path, avg_distance_32)
+print(f"✅ Saved avg_distance_32.npy for visualization at: {distance_matrix_path}")
