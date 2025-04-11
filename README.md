@@ -30,4 +30,4 @@ We can run the regression model using `ridge_regression_by_sector`; the `.ipynb`
 
 The `lgbm_model.py` is a different ML model selection that we are testing for now, but primarily we will be using the ridge regression.
 
-Currently we are testing `Lasso Regression` in comparison with `Ridge regression` to see how the prediction accuracy will change accordingly.
+Currently we are testing `Lasso Regression` in comparison with `Ridge regression` to see how the prediction accuracy will change accordingly.  
