@@ -13,21 +13,18 @@ Key aspects of the project include:
 (4) Evaluation: Assessing model performance using backtesting and statistical metrics.
 
 ## Dataset
-
-After creating an account, you can download the dataset from the following [website](https://challengedata.ens.fr/challenges/143)
-Unzip the file, and there will be 4 csv files.
-Create a folder called `datasets` at the root level of the directory, and then drag the data inside. We cannot upload the data to Github because of the size constraint.
+Create a folder called `datasets` at the root level of the directory, and then drag the data inside. We cannot upload the data to Github because of the size constraint. The data is from Yahoo Finance.
 
 ## Data Cleaning/Signature Computation
 
-This project heavily revolves on the computation of signatures, so we have included both data preprocessing as well as signature computation in `calc_signature.py`. We can then use this function to clean/process our datasets before running our regression models.
+This project heavily revolves on the computation of signatures, so we have included both data preprocessing/download `data_cleansing.py`. NOTE: THIS WILL BE UPDATED BY @JAMES. For now, we can just drag the dataset from James into the datasets folder.
 
-Note: Cannot currently save the dataframe easily, because of how large it is in size.
+1) We first will preprocess the data and calculate the signatures by using `calc_signature.py`.
 
-## Regression
+At this point, our data is already preprocessed and we can run regressions/clustering. 
 
-We can run the regression model using `ridge_regression_by_sector`; the `.ipynb` and `.py` are the same just different speeds.
+To directly run the ridge regression using the given stock features in the dataset by sector/industry, we can use `ridgeRegression_groupby.py`
 
-The `lgbm_model.py` is a different ML model selection that we are testing for now, but primarily we will be using the ridge regression.
+To create automatic clusters using kmeans and clustering, we can run `sig_kernel_adaptive_weight.py` and `sig_kernel_clustering.py`, then after that run the `ridgeRegression_groupby.py`
 
-Currently we are testing `Lasso Regression` in comparison with `Ridge regression` to see how the prediction accuracy will change accordingly.
+Finally, to generate any results, visualizations, data exploration we can use `analyze_ridge_regression_experiements.ipynb`
