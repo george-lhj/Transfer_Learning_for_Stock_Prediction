@@ -122,23 +122,23 @@ print(cluster_sizes)
 ################################################################################
 #                         SAVE OUTPUTS
 ################################################################################
-# 在保存之前将列名改回原来的格式
+# Rename columns back to original format before saving
 if 'STOCK' in df_train.columns:
     df_train.rename(columns={'STOCK': 'symbol'}, inplace=True)
 if 'DATE' in df_train.columns:
     df_train.rename(columns={'DATE': 'date'}, inplace=True)
 
 df_train.to_parquet(clustered_data_path, engine='pyarrow', compression='snappy')
-print(f"✅ Clustered data saved to: {clustered_data_path}")
+print(f"Clustered data saved to: {clustered_data_path}")
 
 # joblib.dump(kmeans_final, model_path)
-# print(f"✅ Saved KMeans model to: {model_path}")
+# print(f"Saved KMeans model to: {model_path}")
 
 # joblib.dump(all_stock_ids, stock_list_path)
-# print(f"✅ Saved stock list to: {stock_list_path}")
+# print(f"Saved stock list to: {stock_list_path}")
 
 # joblib.dump(cluster_centroids, centroids_path)
-# print(f"✅ Saved centroids to: {centroids_path}")
+# print(f"Saved centroids to: {centroids_path}")
 
 # np.save(distance_matrix_path, avg_distance_32)
-# print(f"✅ Saved avg_distance_32.npy for visualization at: {distance_matrix_path}")
+# print(f"Saved avg_distance_32.npy for visualization at: {distance_matrix_path}")
