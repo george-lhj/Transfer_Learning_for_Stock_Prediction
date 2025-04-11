@@ -138,7 +138,7 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
     
     # 保存结果
     if save:
-        output_path = f"./datasets/{output_filename}_w{time_window}_o{order}.parquet"
+        output_path = f"./datasets/{output_filename}_w{time_window}_o{order}_d{len(sig_columns)}.parquet"
         os.makedirs("./datasets", exist_ok=True)
         signature_df.to_parquet(output_path, engine='pyarrow', compression='snappy')
         print(f"结果已保存至: {output_path}")
@@ -148,7 +148,7 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
 # 示例使用
 # 函数调用示例，您可以根据需要修改参数
 if __name__ == "__main__":
-    window_span = 10
+    window_span = 60
     order_num = 3
     df_signatures = calc_signature_new(
         data_path='datasets/sp500_final_data_5y.csv',

@@ -11,6 +11,9 @@ from sklearn.preprocessing import StandardScaler
 from calc_signature import *
 from tqdm import tqdm
 import warnings
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 warnings.filterwarnings('ignore')
 
 def preprocess_returns(df):
@@ -110,7 +113,7 @@ def ridge_regression_by_group(df_train, df_test, group_col='Sector'):
                 estimator=RidgeClassifier(),
                 param_grid=param_grid,
                 cv=5,
-                scoring="balanced_accuracy",
+                scoring="f1",
                 n_jobs=-1
             )
             
@@ -134,7 +137,7 @@ def ridge_regression_by_group(df_train, df_test, group_col='Sector'):
                 "Train_Samples": len(df_group_train),
                 "Test_Samples": len(df_group_test),
                 "Best_Alpha": gs.best_params_["alpha"],
-                "Test_Accuracy": acc,
+                "Test_Accuracy_Score": acc,
                 "Train_Class_Distribution": dict(train_class_dist),
                 "Test_Class_Distribution": dict(test_class_dist),
                 "Report": report,
@@ -152,6 +155,80 @@ def ridge_regression_by_group(df_train, df_test, group_col='Sector'):
             continue
     
     return pd.DataFrame(results), y_true_all, y_pred_all
+
+def plot_accuracy_distribution(results_df, group_col, title, save_path):
+    """
+    Plot accuracy distribution histogram with accuracy values on top of bars
+    
+    Parameters:
+    results_df: DataFrame containing results
+    group_col: Group column name ('Sector' or 'Industry')
+    title: Chart title
+    save_path: Path to save the plot
+    """
+    # Create figure
+    plt.figure(figsize=(15, 8))
+    
+    # Create bar plot
+    bars = plt.bar(results_df[group_col], results_df['Test_Accuracy_Score'])
+    
+    # Add accuracy values on top of bars
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2., height,
+                f'{height:.3f}',  # Only show the overall accuracy
+                ha='center', va='bottom')
+    
+    # Add horizontal line for mean accuracy
+    mean_acc = results_df['Test_Accuracy_Score'].mean()
+    plt.axhline(y=mean_acc, color='r', linestyle='--', label=f'Mean: {mean_acc:.3f}')
+    
+    # Customize plot
+    plt.title(f'Accuracy Distribution by {title}', fontsize=14, pad=20)
+    plt.xlabel(group_col, fontsize=12)
+    plt.ylabel('Accuracy Rate', fontsize=12)
+    
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45, ha='right')
+    
+    # Add legend
+    plt.legend()
+    
+    # Adjust layout to prevent label cutoff
+    plt.tight_layout()
+    
+    # Save plot
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Plot saved to: {save_path}")
+
+def plot_accuracy_comparison():
+    """
+    Plot accuracy distribution comparison for Sector and Industry
+    """
+    # Read the saved CSV files
+    sector_results = pd.read_csv('./datasets/ridge_classification_results_sector.csv')
+    industry_results = pd.read_csv('./datasets/ridge_classification_results_industry.csv')
+    
+    # Ensure datasets folder exists
+    os.makedirs('./datasets', exist_ok=True)
+    
+    # Plot for Sector
+    plot_accuracy_distribution(
+        sector_results,
+        'Sector',
+        'Sector',
+        './datasets/sector_accuracy_distribution.png'
+    )
+    
+    # Plot for Industry
+    plot_accuracy_distribution(
+        industry_results,
+        'Industry',
+        'Industry',
+        './datasets/industry_accuracy_distribution.png'
+    )
 
 def main():
     # Load data
@@ -179,11 +256,18 @@ def main():
         
         # Output results
         print(f"\nTraining results for each {group_col}:")
-        display_cols = ["Train_Samples", "Test_Samples", "Best_Alpha", "Test_Accuracy", 
+        # Ensure selected columns exist in results DataFrame
+        display_cols = [group_col, "Train_Samples", "Test_Samples", 
+                       "Best_Alpha", "Test_Accuracy_Score",
                        "Train_Class_Distribution", "Test_Class_Distribution"]
-        if group_col == 'Industry':
-            display_cols = ['Sector'] + display_cols
-        print(results_df[[group_col] + display_cols])
+        
+        # Select display columns based on grouping type
+        if group_col == 'Industry' and 'Sector' in results_df.columns:
+            display_cols = ['Industry', 'Sector'] + [col for col in display_cols 
+                          if col not in ['Industry', 'Sector']]
+        
+        # Print results in a nice format
+        print(results_df[display_cols].to_string())
         
         # Calculate overall accuracy
         overall_accuracy = accuracy_score(y_true_all, y_pred_all)
@@ -195,6 +279,35 @@ def main():
         output_file = f"./datasets/ridge_classification_results_{group_col.lower()}.csv"
         results_df.to_csv(output_file, index=False)
         print(f"\nResults saved to: {output_file}")
+
+    # After saving all results, call the plotting function
+    plot_accuracy_comparison()
+    
+    # Calculate statistics for each group
+    print("\nCalculating statistics for each group...")
+    sector_stats = df.groupby('Sector')['symbol'].nunique().reset_index()
+    industry_stats = df.groupby('Industry')['symbol'].nunique().reset_index()
+    
+    # Calculate basic statistics
+    basic_stats = pd.DataFrame({
+        'Metric': ['Total_Sectors', 'Total_Industries', 'Avg_Stocks_per_Sector', 
+                  'Avg_Stocks_per_Industry', 'Max_Stocks_in_Sector', 'Max_Stocks_in_Industry'],
+        'Value': [
+            len(sector_stats),
+            len(industry_stats),
+            sector_stats['symbol'].mean(),
+            industry_stats['symbol'].mean(),
+            sector_stats['symbol'].max(),
+            industry_stats['symbol'].max()
+        ]
+    })
+    
+    # Save CSV files
+    sector_stats.to_csv('./datasets/sector_stock_counts.csv', index=False)
+    industry_stats.to_csv('./datasets/industry_stock_counts.csv', index=False)
+    basic_stats.to_csv('./datasets/basic_statistics.csv', index=False)
+    
+    print("Statistics and plots have been saved to the datasets folder")
 
 if __name__ == "__main__":
     main()
