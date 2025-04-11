@@ -67,9 +67,9 @@ def evaluate_predictions(y_true, y_pred):
         'MAE': mean_absolute_error(y_true, y_pred),
         'R2': r2_score(y_true, y_pred),
         'Direction_Accuracy': direction_accuracy,
-        # 添加更多方向预测的详细信息
-        'True_Positive_Rate': np.mean(pred_direction[true_direction]),  # 正确预测上涨的比例
-        'True_Negative_Rate': np.mean(~pred_direction[~true_direction]),  # 正确预测下跌的比例
+        # Add more detailed direction prediction information
+        'True_Positive_Rate': np.mean(pred_direction[true_direction]),  # Proportion of correctly predicted increases
+        'True_Negative_Rate': np.mean(~pred_direction[~true_direction]),  # Proportion of correctly predicted decreases
     }
     return metrics
 
@@ -105,13 +105,13 @@ def ridge_regression_by_group(df_train, df_test, group_col='Sector', use_weights
             df_group_train = df_train[df_train[group_col] == group]
             df_group_test = df_test[df_test[group_col] == group]
             
-            # 如果使用权重，先删除包含NaN权重的样本
+            # If using weights, first remove samples with NaN weights
             if use_weights and 'adaptive_weight' in df_group_train.columns:
-                # 记录删除前的样本数
+                # Record sample count before removal
                 original_size = len(df_group_train)
-                # 删除NaN权重的样本
+                # Remove samples with NaN weights
                 df_group_train = df_group_train.dropna(subset=['adaptive_weight'])
-                # 打印删除的样本数量
+                # Print number of removed samples
                 removed_samples = original_size - len(df_group_train)
                 if removed_samples > 0:
                     print(f"Removed {removed_samples} samples with NaN weights from {group}")
@@ -140,7 +140,7 @@ def ridge_regression_by_group(df_train, df_test, group_col='Sector', use_weights
                 n_jobs=-1
             )
             
-            # 获取训练权重（如果使用）
+            # Get training weights (if using)
             if use_weights and 'adaptive_weight' in df_group_train.columns:
                 weights_train = df_group_train['adaptive_weight'].values
                 # Grid search with sample weights
@@ -200,10 +200,10 @@ def extract_params_from_filename(filename):
     {'w': 30, 'o': 3, 'd': 3, 'weighted': True, 'gamma': 0.5}
     """
     params = {}
-    # 移除.parquet后缀并分割
+    # Remove .parquet extension and split
     parts = filename.replace('.parquet', '').split('_')
     
-    # 只处理包含参数的部分
+    # Only process parts containing parameters
     param_parts = [p for p in parts if any(p.startswith(x) and len(p) > 1 and p[1:].replace('.', '').isdigit() 
                                          for x in ['w', 'o', 'd'])]
     
@@ -215,14 +215,14 @@ def extract_params_from_filename(filename):
         elif part.startswith('d'):
             params['d'] = int(part[1:])
     
-    # 检查是否包含weighted参数
+    # Check if weighted parameter is included
     params['weighted'] = 'weighted' in filename
     if params['weighted']:
-        # 提取gamma值
+        # Extract gamma value
         gamma_part = [p for p in parts if p.startswith('gamma')][0]
         params['gamma'] = float(gamma_part.replace('gamma', ''))
     
-    # 验证基本参数是否存在
+    # Verify basic parameters exist
     if not all(key in params for key in ['w', 'o', 'd']):
         raise ValueError(f"Could not extract all parameters from filename: {filename}")
     
@@ -343,17 +343,17 @@ def main():
             for metric_name, metric_value in overall_metrics.items():
                 print(f"{metric_name}: {metric_value:.4f}")
             
-            # 计算每个组中unique股票的数量
+            # Calculate number of unique stocks in each group
             group_symbol_counts = df[['symbol', group_col]].groupby(group_col)['symbol'].nunique()
             
-            # 只保留成功运行regression的组的symbol counts
+            # Only keep symbol counts for groups that successfully ran regression
             group_symbol_counts = group_symbol_counts[group_symbol_counts.index.isin(results_df[group_col])]
             
-            # 将symbol counts添加到results_df中
+            # Add symbol counts to results_df
             results_df = results_df.copy()
             results_df['Symbol_Count'] = results_df[group_col].map(group_symbol_counts)
             
-            # 如果是CLUSTER列，重置index（重新排序）
+            # If CLUSTER column, reset index (reorder)
             if group_col == 'CLUSTER':
                 results_df[group_col] = range(len(results_df))
             
@@ -363,7 +363,7 @@ def main():
             else:
                 param_suffix = f"_w{params['w']}_o{params['o']}_d{params['d']}"
             
-            # 如果输入文件名包含"cluster"，则在输出文件名末尾添加_cluster后缀
+            # If input filename contains "cluster", add _cluster suffix to output filename
             if "cluster" in sig_file:
                 param_suffix += "_cluster"
                 
@@ -409,7 +409,7 @@ def plot_accuracy_distribution(results_df, group_col, title, save_path, sig_para
     
     # Add symbol counts at the bottom of bars
     for i, row in results_df.iterrows():
-        plt.text(row[group_col], 0.01,  # 在bar底部稍微往上一点的位置
+        plt.text(row[group_col], 0.01,  # Position slightly above bar bottom
                 f'n={row["Symbol_Count"]}',
                 ha='center', va='bottom',
                 rotation=0)
