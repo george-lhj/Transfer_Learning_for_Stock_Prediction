@@ -30,7 +30,8 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
         df = pd.read_parquet(data_path)
     else:
         raise ValueError("不支持的文件格式，请使用.csv或.parquet")
-    
+
+    df = df[['symbol', 'date', 'volume', 'Transaction_Rate', 'Return', 'Sector', 'Industry']]
     print(f"数据已加载，形状: {df.shape}")
     print(f"使用时间窗口: 前{time_window}天")
     print(f"计算签名的列: {sig_columns}")
@@ -39,7 +40,7 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
     df['date'] = pd.to_datetime(df['date'])
     
     # 对缺失值进行处理
-    df = df.fillna(0)
+    df = df.dropna()
     
     # 对收益率进行对数转换 (1+x)，避免负值问题
     if 'Return' in df.columns:
@@ -137,7 +138,7 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
     
     # 保存结果
     if save:
-        output_path = f"./datasets/{output_filename}_w{time_window}_o{order}.parquet"
+        output_path = f"./datasets/{output_filename}_w{time_window}_o{order}_d{len(sig_columns)}.parquet"
         os.makedirs("./datasets", exist_ok=True)
         signature_df.to_parquet(output_path, engine='pyarrow', compression='snappy')
         print(f"结果已保存至: {output_path}")
@@ -147,7 +148,7 @@ def calc_signature_new(data_path, time_window=10, order=3, save=True,
 # 示例使用
 # 函数调用示例，您可以根据需要修改参数
 if __name__ == "__main__":
-    window_span = 10
+    window_span = 60
     order_num = 3
     df_signatures = calc_signature_new(
         data_path='datasets/sp500_final_data_5y.csv',
