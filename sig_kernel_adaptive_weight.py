@@ -74,12 +74,13 @@ def compute_adaptive_weights(time_window=10, order=3, dimension=3, gamma=1.0,
 # Example usage
 if __name__ == "__main__":
     # Make sure these parameters match those used in `calc_signature_new()`
-    for t in [10, 15, 30, 40, 50, 60]:
+    # for t in [10, 15, 30, 40, 50, 60]:
+    for t in [40]:
         weighted_df = compute_adaptive_weights(
             time_window=t,
             order=3,
             dimension=3,
-            gamma=10,
+            gamma=0.125,
             input_filename='sig_data_SP500',
             save=True
         )

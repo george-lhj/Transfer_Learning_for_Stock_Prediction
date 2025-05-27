@@ -16,14 +16,14 @@ random.seed(42)
 ################################################################################
 #                          CONFIGURATION
 ################################################################################
-time_window = 60
+time_window = 40
 order = 3
 dimension = 3
 input_prefix = "sig_data_SP500"
 input_path = f"./datasets/{input_prefix}_w{time_window}_o{order}_d{dimension}.parquet"
 
 # Fixed number of clusters
-optimal_k = 10
+optimal_k = 11
 
 # Output paths
 clustered_data_path = f"./datasets/{input_prefix}_w{time_window}_o{order}_d{dimension}_clusters.parquet"
